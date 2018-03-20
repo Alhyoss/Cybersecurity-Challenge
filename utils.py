@@ -2,12 +2,44 @@ from base64 import *
 import binascii
 
 
+def read_file(input):
+    try:
+        file = open(input, "r")
+        string = file.read()
+    except:
+        file = open(input, "rb")
+        string = file.read()
+    file.close()
+    return string
+
+
+def write_file(output, string):
+    file = open(output, "w")
+    try:
+        file.write(str(string))
+    except:
+        file = open(output, "wb")
+        file.write(string)
+    file.close()
+
+
+def appen_file(output, string):
+    file = open(output, "a")
+    try:
+        file.write(string)
+    except:
+        file = open(output, "ab")
+        file.write(string)
+    file.close()
+
+
 def encode_all(input, output="", printable=True):
     dict = {}
-    dict["b64"] = apply_encode(input, output, False, b64encode)
-    dict["b58"] = apply_encode(input, output, False, b58encode)
-    dict["b32"] = apply_encode(input, output, False, b32encode)
-    dict["b16"] = apply_encode(input, output, False, b16encode)
+    dict["b64"] = encode_b64(input, output, False)
+    dict["b58"] = encode_b58(input, output, False)
+    dict["b32"] = encode_b32(input, output, False)
+    dict["hex"] = encode_hex(input, output, False)
+    dict["binary"] = encode_binary(input, output, False)
     string = ""
     for k, v in dict.items():
         string += k + ": " + str(v) + "\n"
@@ -17,10 +49,11 @@ def encode_all(input, output="", printable=True):
 
 def decode_all(input, output="", printable=True):
     dict = {}
-    dict["b64"] = apply_decode(input, output, False, b64decode)
-    dict["b58"] = apply_decode(input, output, False, b58decode)
-    dict["b32"] = apply_decode(input, output, False, b32decode)
-    dict["b16"] = apply_decode(input, output, False, b16decode)
+    dict["b64"] = decode_b64(input, output, False)
+    dict["b58"] = decode_b58(input, output, False)
+    dict["b32"] = decode_b32(input, output, False)
+    dict["hex"] = decode_hex(input, output, False)
+    dict["binary"] = decode_binary(input, output, False)
     string = ""
     for k, v in dict.items():
         string += k + ": " + str(v) + "\n"
@@ -41,7 +74,20 @@ def encode_b32(input, output="", printable=True):
 
 
 def encode_b16(input, output="", printable=True):
-    return apply_encode(input, output, printable, b16encode)
+    return encode_hex(input, output, printable)
+
+
+def encode_hex(input, output="", printable=True):
+    return apply_encode(input, output, printable, binascii.hexlify)
+
+
+def encode_b2(input, output="", printable=True):
+    return apply_encode(input, output, printable, b2encode)
+
+
+def encode_binary(input, output="", printable=True):
+    return apply_encode(input, output, printable, b2encode)
+
 
 def decode_b64(input, output="", printable=True):
     return apply_decode(input, output, printable, b64decode)
@@ -56,8 +102,19 @@ def decode_b32(input, output="", printable=True):
 
 
 def decode_b16(input, output="", printable=True):
-    return apply_decode(input, output, printable, b16decode)
+    return decode_hex(input, output, printable)
 
+
+def decode_hex(input, output="", printable=True):
+    return apply_decode(input, output, printable, binascii.unhexlify)
+
+
+def decode_b2(input, output="", printable=True):
+    return decode_binary(input, output, printable)
+
+
+def decode_binary(input, output="", printable=True):
+    return apply_decode(input, output, printable, b2decode)
 
 if bytes == str:  # python2
     iseq, bseq, buffer = (
@@ -110,6 +167,13 @@ def b58encode(string):
     return (alphabet[0:1] * nPad + result)
 
 
+def b2encode(string):
+    bytes = ""
+    for c in string:
+        b = format(ord(c), "b")
+        bytes += b if len(b) == 8 else "0"*(8-len(b)) + b
+    return bytes
+
 
 def b58decode(string):
     def b58decode_int(string):
@@ -134,28 +198,20 @@ def b58decode(string):
     return (b'\0' * (origlen - newlen) + bseq(reversed(result)))
 
 
+def b2decode(string):
+    n = int(string, 2)
+    return binascii.unhexlify("%x" % n)
+
+
 def get_string(input, output):
     if output == "":
         return input
-    file = open(input, "r")
-    try:
-        string = file.read()
-    except:
-        file = open(input, "rb")
-        string = file.read()
-    file.close()
-    return string
+    return read_file(input)
 
 
 def write_string(string, output, printable):
     if output != "":
-        file = open(output, "w")
-        try:
-            file.write(str(string))
-        except:
-            file = open(output, "wb")
-            file.write(string)
-        file.close()
+        write_file(output, string)
     if printable:
         print(string)
 
@@ -173,13 +229,19 @@ def apply_encode(input, output, printable, fun):
 def apply_decode(input, output, printable, fun):
     string = get_string(input, output)
     decoded = ""
-    try:
-        decoded = fun(string).decode("utf-8")
-    except:
+    lines = string.split("\n")
+    for line in lines:
         try:
-            decoded = fun(string)
+            decoded += fun(line).decode("utf-8")
         except:
-            write_string("Unable to decode", output, printable)
-            return "Unable to decode"
+            try:
+                decoded += fun(line)
+            except Exception as e:
+                write_string("Unable to decode: " + str(e), output, printable)
+                return "Unable to decode"
     write_string(decoded, output, printable)
     return decoded
+
+x = encode_b58("comment???")
+
+decode_b58(x)
