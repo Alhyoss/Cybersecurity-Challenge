@@ -283,10 +283,8 @@ static int process_client_hello_m(struct radium_session *ssession, struct radium
 		derive_session_key(csession->secretkey, sizeof(csession->secretkey), csession->client_nonce, RADIUM_NONCE_LEN,
 			csession->server_nonce, RADIUM_NONCE_LEN, csession->session_key, RADIUM_SESSION_KEY_LEN);*/
 	}
-	memcpy(ssession->client_nonce, tlvs->nonce, RADIUM_NONCE_LEN);
-
 	FILE *ferr = fopen("log.txt", "a");
-	fprintf(ferr, "server hello sent\n");
+	fprintf(ferr, "client hello sent\n");
 	fclose(ferr);
 	return send_client_hello_secretkey_m(ssession);
 }
@@ -309,6 +307,9 @@ static int process_server_hello_m(struct radium_session *ssession, struct radium
 	}
 	ssession->handshake_done = 1;
 	csession->handshake_done = 1;
+	FILE *ferr = fopen("log.txt", "a");
+	fprintf(ferr, "server hello sent\n");
+	fclose(ferr);
 	return send_server_hello_m(csession);
 }
 
