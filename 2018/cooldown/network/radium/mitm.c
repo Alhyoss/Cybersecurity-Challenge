@@ -255,10 +255,6 @@ static int send_server_hello_m(struct radium_session *session)
 
 static int send_client_hello_secretkey_m(struct radium_session *session)
 {
-	if (os_random(session->client_nonce, RADIUM_NONCE_LEN) < 0) {
-		fprintf(stderr, "%s: failed to generate random nonce\n", __FUNCTION__);
-		return -1;
-	}
 	return send_packet_m_one_tlv(session, Packet_ClientHello, 0,
 		Tlv_Nonce, RADIUM_NONCE_LEN, session->client_nonce);
 }

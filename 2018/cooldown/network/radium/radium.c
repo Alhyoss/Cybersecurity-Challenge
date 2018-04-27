@@ -498,7 +498,6 @@ int radium_loop(struct radium_session *session)
 	}
 
 	// Now react to received packets
-	fprintf(stderr, "just before reading\n");
 	while (read_packet(buffer, sizeof(buffer)) >= 0)
 	{
 		if (process_packet(session, hdr) < 0)
